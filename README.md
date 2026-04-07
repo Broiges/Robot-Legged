@@ -80,45 +80,105 @@ Program simulasi inverse kinematik untuk robot lengan planar 3 DOF menggunakan m
 - Visualisasi interaktif dengan slider
 - Tracking error dan workspace
 
-## Rumus Inverse Kinematik
+# 🤖 Inverse Kinematics Robot 3 DOF Planar
 
-### Parameter
-L1, L2, L3 = panjang link (m)
-(x, y) = posisi target
-θ1, θ2, θ3 = sudut joint (derajat)
+## 📋 Deskripsi Program
 
+Program ini merupakan implementasi **Inverse Kinematics** untuk robot manipulator dengan **3 Degree of Freedom (DOF)** planar. Program dapat menghitung sudut-sudut joint (θ₁, θ₂, θ₃) yang diperlukan agar end-effector robot mencapai posisi target (x, y) yang diinginkan.
 
-### Rumus Utama
+Program menampilkan **dua konfigurasi solusi**:
+- **Elbow Up** (siku ke atas)
+- **Elbow Down** (siku ke bawah)
 
-**Jarak target:**
-D = √(x² + y²)
-
-
-**Batas workspace:**
-R_max = L1 + L2 + L3
-R_min = |L1 - L2 - L3|
-Syarat reachable: R_min ≤ D ≤ R_max
+Setiap konfigurasi divisualisasikan dalam bentuk grafik 2D yang menunjukkan posisi base, elbow, wrist, dan end-effector.
 
 
-**Orientasi (θ3):**
-θ3 = orientation (default: atan2(y, x))
+## 📐 Spesifikasi Robot
 
+| Parameter | Nilai | Keterangan |
+|-----------|-------|-------------|
+| L₁ | 5.0 m | Panjang link 1 (Base ke Elbow) |
+| L₂ | 4.0 m | Panjang link 2 (Elbow ke Wrist) |
+| L₃ | 3.0 m | Panjang link 3 (Wrist ke End-Effector) |
+| Jangkauan Min | 2.0 m | Jarak minimal yang dapat dijangkau |
+| Jangkauan Max | 12.0 m | Jarak maksimal yang dapat dijangkau |
 
-**Posisi wrist:**
-wrist_x = x - L3·cos(θ3)
-wrist_y = y - L3·sin(θ3)
+> **Catatan:** Panjang link dapat diubah langsung pada kode di bagian `__init__` method.
+
+## 🧮 Metode dan Rumus yang Digunakan
+
+### 1. Forward Kinematics
+
+Forward kinematics digunakan untuk menghitung posisi end-effector berdasarkan sudut joint yang diketahui.
+
+**Rumus:**
+x = L₁·cos(θ₁) + L₂·cos(θ₁+θ₂) + L₃·cos(θ₁+θ₂+θ₃)
+y = L₁·sin(θ₁) + L₂·sin(θ₁+θ₂) + L₃·sin(θ₁+θ₂+θ₃)
+
+text
+
+**Posisi Joint:**
+- **Joint 1 (Base):** (0, 0)
+- **Joint 2 (Elbow):** (L₁·cos θ₁, L₁·sin θ₁)
+- **Joint 3 (Wrist):** (x₂ + L₂·cos(θ₁+θ₂), y₂ + L₂·sin(θ₁+θ₂))
+- **End-Effector:** (x₃ + L₃·cos(θ₁+θ₂+θ₃), y₃ + L₃·sin(θ₁+θ₂+θ₃))
+
+### 2. Inverse Kinematics (Metode Geometri)
+
+Metode geometri digunakan untuk menghitung sudut joint berdasarkan posisi target (x, y).
+
+#### Langkah 1: Menentukan Orientasi End-Effector (θ₃)
+θ₃ = atan2(y_target, x_target)
+
+text
+
+Orientasi default mengarah ke target.
+
+#### Langkah 2: Menghitung Posisi Wrist
+wrist_x = x_target - L₃·cos(θ₃)
+wrist_y = y_target - L₃·sin(θ₃)
 D_wrist = √(wrist_x² + wrist_y²)
 
+text
 
-**Hukum Cosinus untuk θ2:**
-cos_θ2 = (L1² + L2² - D_wrist²) / (2·L1·L2)
-θ2 = atan2(±√(1-cos²θ2), cos_θ2)
+#### Langkah 3: Menghitung θ₂ (Hukum Cosinus)
 
+Menggunakan hukum cosinus pada segitiga yang dibentuk oleh L₁, L₂, dan D_wrist:
+cos θ₂ = (L₁² + L₂² - D_wrist²) / (2·L₁·L₂)
+sin θ₂ = ±√(1 - cos²θ₂)
+θ₂ = atan2(sin θ₂, cos θ₂)
 
-**Sudut θ1:**
+text
+
+**Tanda ± menentukan konfigurasi:**
+- `+` untuk Elbow Up
+- `-` untuk Elbow Down
+
+#### Langkah 4: Menghitung θ₁
 γ = atan2(wrist_y, wrist_x)
-α = atan2(L2·sinθ2, L1 + L2·cosθ2)
-θ1 = γ - α
+α = atan2(L₂·sin θ₂, L₁ + L₂·cos θ₂)
+θ₁ = γ - α
+
+text
+
+### 3. Validasi Reachability
+
+Program memeriksa apakah target berada dalam jangkauan robot:
+D = √(x_target² + y_target²)
+
+if D > (L₁ + L₂ + L₃): # Melebihi jangkauan maksimal
+Target tidak reachable
+
+if D < |L₁ - L₂ - L₃|: # Kurang dari jangkauan minimal
+Target tidak reachable
+
+Input koordinat x dan y :
 
 
-## Metode Geometri
+<img width="523" height="274" alt="Screenshot 2026-04-07 182401" src="https://github.com/user-attachments/assets/5c7503b7-03a8-4702-94fd-8b235d7fe2c2" />
+
+
+Hasil dari program simulasi inverse kinematik:
+
+
+<img width="898" height="601" alt="Screenshot 2026-04-07 182418" src="https://github.com/user-attachments/assets/b247c4e8-8543-451f-9b12-6434c050344b" />
